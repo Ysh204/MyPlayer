@@ -27,11 +27,25 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 /build/
 /coverage/
+
+# Distribution packages & archives
+dist/
+*.zip
+*.tar.gz
+*.7z
+
+# Windows shortcuts, binaries & symbols
+*.lnk
+*.exe
+*.dll
+*.pdb
+*.dmp
 
 # Symbolication related
 app.*.symbols
