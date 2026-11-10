@@ -1117,14 +1117,21 @@ class _EmptyStateOverlay extends StatelessWidget {
       child: Container(
         width: 360,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 26),
-        decoration: BoxDecoration(
-          color: const Color(0xF4111218),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xB210121A),
+              Color(0xD90C0D14),
+              Color(0xF008080C),
+            ],
+          ),
           borderRadius: BorderRadius.zero,
-          border: Border.all(color: const Color(0x38FFFFFF), width: 1.0),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
               color: Color(0x88000000),
-              blurRadius: 30,
+              blurRadius: 36,
               offset: Offset(0, 8),
             ),
           ],
@@ -1135,10 +1142,9 @@ class _EmptyStateOverlay extends StatelessWidget {
             Container(
               width: 46,
               height: 46,
-              decoration: BoxDecoration(
-                color: const Color(0x18FFFFFF),
+              decoration: const BoxDecoration(
+                color: Color(0x18FFFFFF),
                 borderRadius: BorderRadius.zero,
-                border: Border.all(color: const Color(0x38FFFFFF)),
               ),
               alignment: Alignment.center,
               child: const Icon(
@@ -1193,7 +1199,7 @@ class _EmptyStateOverlay extends StatelessWidget {
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
-                    side: const BorderSide(color: Color(0x38FFFFFF)),
+                    side: const BorderSide(color: Color(0x1AFFFFFF)),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 9,
@@ -1289,18 +1295,32 @@ class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-          decoration: BoxDecoration(
-            color: const Color(0xF6101117),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0x880E1018),
+                Color(0xC80B0C12),
+                Color(0xEB07080D),
+              ],
+              stops: [0.0, 0.45, 1.0],
+            ),
             borderRadius: BorderRadius.zero,
-            border: Border.all(color: const Color(0x38FFFFFF), width: 1.0),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x88000000),
-                blurRadius: 24,
-                offset: Offset(0, 8),
+                color: Color(0x66000000),
+                blurRadius: 32,
+                spreadRadius: 2,
+                offset: Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 12,
+                offset: Offset(0, 2),
               ),
             ],
           ),
@@ -1411,7 +1431,7 @@ class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
 
                   // Play / Pause sleek right-angle button
                   Material(
-                    color: const Color(0xFF1E202C),
+                    color: const Color(0x18FFFFFF),
                     borderRadius: BorderRadius.zero,
                     child: InkWell(
                       borderRadius: BorderRadius.zero,
@@ -1420,13 +1440,6 @@ class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
                         width: 28,
                         height: 28,
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.zero,
-                          border: Border.all(
-                            color: const Color(0x38FFFFFF),
-                            width: 0.8,
-                          ),
-                        ),
                         child: Icon(
                           playing ? Icons.pause : Icons.play_arrow,
                           size: 20,
@@ -1478,7 +1491,7 @@ class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
                     elevation: 16,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero,
-                      side: BorderSide(color: Color(0x38FFFFFF), width: 0.8),
+                      side: BorderSide(color: Color(0x14FFFFFF), width: 0.8),
                     ),
                     itemBuilder: (_) => [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
                         .map((rate) => PopupMenuItem(
@@ -1510,12 +1523,10 @@ class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
                         .toList(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: const Color(0x1AFFFFFF),
+                          horizontal: 6, vertical: 3),
+                      decoration: const BoxDecoration(
+                        color: Color(0x18FFFFFF),
                         borderRadius: BorderRadius.zero,
-                        border: Border.all(
-                            color: const Color(0x38FFFFFF), width: 0.8),
                       ),
                       child: Text(
                         '${widget.speed}x',
