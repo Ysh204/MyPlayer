@@ -24,6 +24,7 @@ Future<void> main() async {
       await windowManager.show();
       await windowManager.focus();
     });
+    await windowManager.setPreventClose(true);
   }
 
   runApp(const ProviderScope(child: MyPlayerApp()));

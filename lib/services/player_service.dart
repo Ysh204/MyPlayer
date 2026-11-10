@@ -65,7 +65,12 @@ class PlayerService {
 
   Future<void> previous() => player.previous();
 
-  Future<void> stop() => player.stop();
+  Future<void> stop() async {
+    try {
+      await player.setVolume(0);
+    } catch (_) {}
+    await player.stop();
+  }
 
   Future<void> jumpTo(int index) => player.jump(index);
 
@@ -119,5 +124,11 @@ class PlayerService {
   Future<void> loadSubtitleFile(String path) =>
       subtitleService.loadExternalSubtitle(path);
 
-  Future<void> dispose() => player.dispose();
+  Future<void> dispose() async {
+    try {
+      await player.setVolume(0);
+      await player.stop();
+    } catch (_) {}
+    await player.dispose();
+  }
 }
