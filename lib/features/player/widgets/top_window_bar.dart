@@ -277,3 +277,4 @@ class _CaptionButtonState extends State<_CaptionButton> {
     );
   }
 }
+
