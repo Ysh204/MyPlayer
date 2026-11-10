@@ -28,3 +28,4 @@ Add-Type -TypeDefinition $code -ErrorAction SilentlyContinue
 [ShellNotifyUnreg]::SHChangeNotify(0x08000000, 0x0000, [IntPtr]::Zero, [IntPtr]::Zero)
 
 Write-Host "Successfully unregistered $appName from Windows."
+

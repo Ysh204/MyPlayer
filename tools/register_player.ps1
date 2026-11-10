@@ -80,3 +80,4 @@ Add-Type -TypeDefinition $code -ErrorAction SilentlyContinue
 
 Write-Host "Successfully registered $appName with Windows."
 Write-Host "You can now select $appName directly in Windows Settings > Default Apps or right-click any video -> Open with -> Always."
+
