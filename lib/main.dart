@@ -38,6 +38,7 @@ Future<void> main(List<String> args) async {
       center: true,
       backgroundColor: Colors.black,
       title: 'MyPlayer Pro',
+      titleBarStyle: TitleBarStyle.hidden,
     );
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();

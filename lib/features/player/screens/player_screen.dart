@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../../core/title_cleaner.dart';
 import '../../../core/utils/time_formatter.dart';
 import '../../audio/widgets/equalizer_panel.dart';
 import '../../playlist/widgets/playlist_panel.dart';
@@ -22,6 +23,7 @@ import '../../subtitles/widgets/subtitle_panel.dart';
 import '../providers/playback_preferences_provider.dart';
 import '../providers/player_provider.dart';
 import '../widgets/osd_overlay.dart';
+import '../widgets/top_window_bar.dart';
 import '../widgets/track_picker.dart';
 
 const _contextMenuStyle = MenuStyle(
@@ -66,6 +68,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   final MenuController _contextMenuController = MenuController();
   bool _showControls = true;
   bool _isFullScreen = false;
+  bool _isMaximized = false;
   Timer? _hideTimer;
   List<String> _recentFiles = [];
 
@@ -84,6 +87,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
     unawaited(_restoreRecentFiles());
     unawaited(_checkFullscreenState());
+    unawaited(_checkMaximizedState());
     final initialMedia = widget.initialMediaPaths;
     if (initialMedia != null && initialMedia.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -97,6 +101,33 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
   @override
   void onWindowClose() async {
     await _quitApp();
+  }
+
+  @override
+  void onWindowMaximize() {
+    if (mounted) setState(() => _isMaximized = true);
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    if (mounted) setState(() => _isMaximized = false);
+  }
+
+  @override
+  void onWindowEnterFullScreen() {
+    if (mounted) setState(() => _isFullScreen = true);
+  }
+
+  @override
+  void onWindowLeaveFullScreen() {
+    if (mounted) setState(() => _isFullScreen = false);
+  }
+
+  Future<void> _checkMaximizedState() async {
+    try {
+      final max = await windowManager.isMaximized();
+      if (mounted) setState(() => _isMaximized = max);
+    } catch (_) {}
   }
 
   Future<void> _quitApp() async {
@@ -175,14 +206,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
           );
     } else if (selectedPaths.length == 1) {
       await notifier.openFile(selectedPaths.single);
+      final clean = cleanMediaTitle(p.basename(selectedPaths.single));
       ref.read(osdProvider.notifier).show(
             text: 'Opening Media',
-            subtext: p.basename(selectedPaths.single),
+            subtext: clean,
             icon: Icons.movie_rounded,
           );
       unawaited(
         windowManager.setTitle(
-          '${p.basename(selectedPaths.single)} - MyPlayer Pro',
+          '$clean - MyPlayer Pro',
         ),
       );
     } else {
@@ -863,6 +895,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     final buffering = ref.watch(playerBufferingProvider).valueOrNull ?? false;
     final hasMedia = playlist != null && playlist.medias.isNotEmpty;
 
+    String? currentMediaUri;
+    int? playlistIndex;
+    int? playlistTotal;
+    if (hasMedia) {
+      playlistIndex = playlist.index;
+      playlistTotal = playlist.medias.length;
+      if (playlist.index >= 0 && playlist.index < playlist.medias.length) {
+        currentMediaUri = playlist.medias[playlist.index].uri;
+      }
+    }
+
     // Listen to media_kit errors to display a clean notification
     ref.listen<AsyncValue<String>>(playerErrorProvider, (prev, next) {
       next.whenData((errorMsg) {
@@ -1069,26 +1112,47 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
                         // Side drawers
                         if (activeDrawer == ActiveDrawerPanel.audio)
                           const Positioned(
-                            top: 0,
+                            top: 36,
                             bottom: 0,
                             right: 0,
                             child: EqualizerPanel(),
                           ),
                         if (activeDrawer == ActiveDrawerPanel.subtitles)
                           const Positioned(
-                            top: 0,
+                            top: 36,
                             bottom: 0,
                             right: 0,
                             child: SubtitlePanel(),
                           ),
                         if (activeDrawer == ActiveDrawerPanel.playlist)
                           Positioned(
-                            top: 0,
+                            top: 36,
                             bottom: 0,
                             right: 0,
                             child:
                                 PlaylistPanel(onAddFiles: _pickFilesToQueue),
                           ),
+
+                        // Top window caption bar (sleek obsidian glassmorphism)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: TopWindowBar(
+                            mediaUri: currentMediaUri,
+                            playlistIndex: playlistIndex,
+                            playlistTotal: playlistTotal,
+                            isMaximized: _isMaximized,
+                            isFullScreen: _isFullScreen,
+                            visible: !hasMedia ||
+                                _showControls ||
+                                activeDrawer != ActiveDrawerPanel.none,
+                            onHoverEnter: () => _hideTimer?.cancel(),
+                            onHoverExit: () => _scheduleControlsHide(),
+                            onClose: _quitApp,
+                            onToggleFullscreen: _toggleFullscreen,
+                          ),
+                        ),
                       ],
                     ),
                   ),
