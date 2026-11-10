@@ -12,11 +12,13 @@ import 'features/player/screens/player_screen.dart';
 class MyPlayerApp extends ConsumerStatefulWidget {
   final String? screenshotPath;
   final ActiveDrawerPanel? initialDrawer;
+  final List<String>? initialMediaPaths;
 
   const MyPlayerApp({
     super.key,
     this.screenshotPath,
     this.initialDrawer,
+    this.initialMediaPaths,
   });
 
   @override
@@ -76,7 +78,7 @@ class _MyPlayerAppState extends ConsumerState<MyPlayerApp> {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      home: const PlayerScreen(),
+      home: PlayerScreen(initialMediaPaths: widget.initialMediaPaths),
     );
   }
 }

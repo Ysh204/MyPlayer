@@ -14,6 +14,8 @@ Future<void> main(List<String> args) async {
 
   String? screenshotPath;
   ActiveDrawerPanel? initialDrawer;
+  final List<String> initialMediaPaths = [];
+
   for (final arg in args) {
     if (arg.startsWith('--screenshot=')) {
       screenshotPath = arg.substring('--screenshot='.length);
@@ -23,6 +25,8 @@ Future<void> main(List<String> args) async {
       initialDrawer = ActiveDrawerPanel.playlist;
     } else if (arg == '--drawer=subtitles') {
       initialDrawer = ActiveDrawerPanel.subtitles;
+    } else if (!arg.startsWith('--') && arg.trim().isNotEmpty) {
+      initialMediaPaths.add(arg.trim());
     }
   }
 
@@ -47,6 +51,7 @@ Future<void> main(List<String> args) async {
       child: MyPlayerApp(
         screenshotPath: screenshotPath,
         initialDrawer: initialDrawer,
+        initialMediaPaths: initialMediaPaths,
       ),
     ),
   );

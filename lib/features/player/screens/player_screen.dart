@@ -50,7 +50,9 @@ const _contextMenuButtonStyle = ButtonStyle(
 );
 
 class PlayerScreen extends ConsumerStatefulWidget {
-  const PlayerScreen({super.key});
+  final List<String>? initialMediaPaths;
+
+  const PlayerScreen({super.key, this.initialMediaPaths});
 
   @override
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
@@ -81,6 +83,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
     );
     unawaited(_restoreRecentFiles());
     unawaited(_checkFullscreenState());
+    final initialMedia = widget.initialMediaPaths;
+    if (initialMedia != null && initialMedia.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _openMediaPaths(initialMedia);
+        }
+      });
+    }
   }
 
   @override
@@ -169,12 +179,22 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen>
             subtext: p.basename(selectedPaths.single),
             icon: Icons.movie_rounded,
           );
+      unawaited(
+        windowManager.setTitle(
+          '${p.basename(selectedPaths.single)} - MyPlayer Pro',
+        ),
+      );
     } else {
       await notifier.openFiles(selectedPaths);
       ref.read(osdProvider.notifier).show(
             text: 'Opened Playlist (${selectedPaths.length} items)',
             icon: Icons.playlist_play_rounded,
           );
+      unawaited(
+        windowManager.setTitle(
+          'Playlist (${selectedPaths.length} items) - MyPlayer Pro',
+        ),
+      );
     }
     await _rememberRecentFiles(selectedPaths);
     _bumpControlsVisibility();
