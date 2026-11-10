@@ -15,8 +15,10 @@ import 'package:window_manager/window_manager.dart';
 import '../../../core/utils/time_formatter.dart';
 import '../../audio/widgets/equalizer_panel.dart';
 import '../../playlist/widgets/playlist_panel.dart';
+import '../../settings/widgets/playback_settings_dialog.dart';
 import '../../subtitles/providers/subtitle_provider.dart';
 import '../../subtitles/widgets/subtitle_panel.dart';
+import '../providers/playback_preferences_provider.dart';
 import '../providers/player_provider.dart';
 import '../widgets/track_picker.dart';
 
@@ -62,6 +64,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   void initState() {
     super.initState();
+    ref.listenManual<PlaybackPreferences>(
+      playbackPreferencesProvider,
+      (previous, next) => _runAction(
+        () => ref
+            .read(playerServiceProvider)
+            .setPrecisionSeeking(next.precisionSeeking),
+      ),
+      fireImmediately: true,
+    );
     unawaited(_restoreRecentFiles());
   }
 
@@ -274,6 +285,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       );
 
   List<Widget> _buildContextMenu() {
+    final preferences = ref.watch(playbackPreferencesProvider);
     final tracks =
         ref.watch(playerTracksProvider).valueOrNull ?? const Tracks();
     final currentTrack =
@@ -359,20 +371,24 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       _submenu('Subtitle Track', _subtitleTrackItems(tracks, currentTrack)),
       _submenu('Navigate', [
         _menuItem(
-          'Back 10 seconds',
-          () => _runAction(() => notifier.seekBy(const Duration(seconds: -10))),
+          'Back ${preferences.seekStepSeconds} seconds',
+          () => _runAction(() => notifier.seekBy(
+                Duration(seconds: -preferences.seekStepSeconds),
+              )),
         ),
         _menuItem(
-          'Forward 10 seconds',
-          () => _runAction(() => notifier.seekBy(const Duration(seconds: 10))),
+          'Forward ${preferences.seekStepSeconds} seconds',
+          () => _runAction(() => notifier.seekBy(
+                Duration(seconds: preferences.seekStepSeconds),
+              )),
         ),
         _menuItem(
-          'Back 1 minute',
-          () => _runAction(() => notifier.seekBy(const Duration(minutes: -1))),
+          'Back 30 seconds',
+          () => _runAction(() => notifier.seekBy(const Duration(seconds: -30))),
         ),
         _menuItem(
-          'Forward 1 minute',
-          () => _runAction(() => notifier.seekBy(const Duration(minutes: 1))),
+          'Forward 30 seconds',
+          () => _runAction(() => notifier.seekBy(const Duration(seconds: 30))),
         ),
       ]),
       _submenu('Capture', [
@@ -400,6 +416,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       ]),
       _menuDivider(),
       _menuItem('Properties…', _showProperties),
+      _menuItem('Playback & shortcuts…', _showPlaybackSettings),
       _menuItem('Keyboard shortcuts', _showKeyboardShortcuts),
       _menuItem('Exit', () => _runAction(windowManager.close),
           shortcut: 'Alt+F4'),
@@ -532,20 +549,36 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   void _showKeyboardShortcuts() {
+    final preferences = ref.read(playbackPreferencesProvider);
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Keyboard shortcuts'),
-        content: const SizedBox(
+        content: SizedBox(
           width: 360,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _ShortcutRow('Open file', 'Ctrl+O'),
-              _ShortcutRow('Play / Pause', 'Space'),
-              _ShortcutRow('Seek backward / forward 10 seconds', '← / →'),
-              _ShortcutRow('Toggle fullscreen', 'F11'),
-              _ShortcutRow('Context menu', 'Right-click'),
+              const _ShortcutRow('Open file', 'Ctrl+O'),
+              const _ShortcutRow('Play / Pause', 'Space'),
+              _ShortcutRow(
+                'Seek backward ${preferences.seekStepSeconds} seconds',
+                preferences.seekBackwardKeyLabel,
+              ),
+              _ShortcutRow(
+                'Seek forward ${preferences.seekStepSeconds} seconds',
+                preferences.seekForwardKeyLabel,
+              ),
+              _ShortcutRow(
+                'Volume down ${preferences.volumeStepPercent.round()}%',
+                preferences.volumeDownKeyLabel,
+              ),
+              _ShortcutRow(
+                'Volume up ${preferences.volumeStepPercent.round()}%',
+                preferences.volumeUpKeyLabel,
+              ),
+              const _ShortcutRow('Toggle fullscreen', 'F11'),
+              const _ShortcutRow('Context menu', 'Right-click'),
             ],
           ),
         ),
@@ -556,6 +589,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showPlaybackSettings() {
+    showDialog<void>(
+      context: context,
+      builder: (_) => const PlaybackSettingsDialog(),
     );
   }
 
@@ -572,17 +612,32 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     final activeDrawer = ref.watch(activeDrawerProvider);
     final subtitle = ref.watch(subtitleProvider);
     final playback = ref.watch(playbackProvider);
+    final playbackPreferences = ref.watch(playbackPreferencesProvider);
 
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.space):
             ref.read(playbackProvider.notifier).playOrPause,
-        const SingleActivator(LogicalKeyboardKey.arrowRight): () => ref
-            .read(playbackProvider.notifier)
-            .seekBy(const Duration(seconds: 10)),
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => ref
-            .read(playbackProvider.notifier)
-            .seekBy(const Duration(seconds: -10)),
+        SingleActivator(
+          LogicalKeyboardKey(playbackPreferences.seekForwardKeyId),
+        ): () => ref.read(playbackProvider.notifier).seekBy(
+              Duration(seconds: playbackPreferences.seekStepSeconds),
+            ),
+        SingleActivator(
+          LogicalKeyboardKey(playbackPreferences.seekBackwardKeyId),
+        ): () => ref.read(playbackProvider.notifier).seekBy(
+              Duration(seconds: -playbackPreferences.seekStepSeconds),
+            ),
+        SingleActivator(
+          LogicalKeyboardKey(playbackPreferences.volumeUpKeyId),
+        ): () => ref.read(playbackProvider.notifier).changeVolumeBy(
+              playbackPreferences.volumeStepPercent,
+            ),
+        SingleActivator(
+          LogicalKeyboardKey(playbackPreferences.volumeDownKeyId),
+        ): () => ref.read(playbackProvider.notifier).changeVolumeBy(
+              -playbackPreferences.volumeStepPercent,
+            ),
         const SingleActivator(LogicalKeyboardKey.keyO, control: true): () =>
             _runAction(_pickMediaFile),
         const SingleActivator(LogicalKeyboardKey.f11): () =>
@@ -653,6 +708,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         bottom: _showControls ? 0 : -130,
                         child: _BottomControlsBar(
                           onOpenFile: _pickMediaFile,
+                          onShowPlaybackSettings: _showPlaybackSettings,
                           volume: playback.volume,
                           speed: playback.speed,
                           activeDrawer: activeDrawer,
@@ -691,21 +747,37 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 }
 
-class _BottomControlsBar extends ConsumerWidget {
+class _BottomControlsBar extends ConsumerStatefulWidget {
   final Future<void> Function({bool allowMultiple}) onOpenFile;
+  final VoidCallback onShowPlaybackSettings;
   final double volume;
   final double speed;
   final ActiveDrawerPanel activeDrawer;
 
   const _BottomControlsBar({
     required this.onOpenFile,
+    required this.onShowPlaybackSettings,
     required this.volume,
     required this.speed,
     required this.activeDrawer,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_BottomControlsBar> createState() => _BottomControlsBarState();
+}
+
+class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
+  double? _scrubPositionMs;
+  Timer? _clearScrubTimer;
+
+  @override
+  void dispose() {
+    _clearScrubTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final playerNotifier = ref.read(playbackProvider.notifier);
     final position =
         ref.watch(playerPositionProvider).valueOrNull ?? Duration.zero;
@@ -715,6 +787,8 @@ class _BottomControlsBar extends ConsumerWidget {
     final maxMs =
         duration.inMilliseconds > 0 ? duration.inMilliseconds.toDouble() : 1.0;
     final currentMs = position.inMilliseconds.toDouble().clamp(0.0, maxMs);
+    final sliderMs = (_scrubPositionMs ?? currentMs).clamp(0.0, maxMs);
+    final displayedPosition = Duration(milliseconds: sliderMs.round());
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -733,16 +807,29 @@ class _BottomControlsBar extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Text(formatDuration(position),
+              Text(formatDuration(displayedPosition),
                   style: const TextStyle(fontSize: 12)),
               Expanded(
                 child: Slider(
-                  value: currentMs,
+                  value: sliderMs,
                   min: 0.0,
                   max: maxMs,
-                  onChanged: (value) => playerNotifier.seekTo(
-                    Duration(milliseconds: value.round()),
-                  ),
+                  onChanged: (value) {
+                    setState(() => _scrubPositionMs = value);
+                  },
+                  onChangeEnd: (value) {
+                    _clearScrubTimer?.cancel();
+                    setState(() => _scrubPositionMs = value);
+                    unawaited(playerNotifier.seekTo(
+                      Duration(milliseconds: value.round()),
+                    ));
+                    _clearScrubTimer = Timer(
+                      const Duration(milliseconds: 900),
+                      () {
+                        if (mounted) setState(() => _scrubPositionMs = null);
+                      },
+                    );
+                  },
                 ),
               ),
               Text(formatDuration(duration),
@@ -754,7 +841,7 @@ class _BottomControlsBar extends ConsumerWidget {
               IconButton(
                 tooltip: 'Open media file',
                 icon: const Icon(Icons.folder_open_rounded),
-                onPressed: onOpenFile,
+                onPressed: widget.onOpenFile,
               ),
               IconButton(
                 tooltip: 'Previous item',
@@ -779,17 +866,18 @@ class _BottomControlsBar extends ConsumerWidget {
               SizedBox(
                 width: 110,
                 child: Slider(
-                  value: volume,
+                  value: widget.volume,
                   min: 0.0,
                   max: 150.0,
                   onChanged: playerNotifier.setVolume,
                 ),
               ),
-              Text('${volume.round()}%', style: const TextStyle(fontSize: 12)),
+              Text('${widget.volume.round()}%',
+                  style: const TextStyle(fontSize: 12)),
               const Spacer(),
               PopupMenuButton<double>(
                 tooltip: 'Playback speed',
-                initialValue: speed,
+                initialValue: widget.speed,
                 onSelected: playerNotifier.setRate,
                 itemBuilder: (_) => [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
                     .map((rate) => PopupMenuItem(
@@ -800,21 +888,26 @@ class _BottomControlsBar extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
-                    '${speed}x',
+                    '${widget.speed}x',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
               IconButton(
+                tooltip: 'Playback & shortcuts',
+                icon: const Icon(Icons.tune_rounded),
+                onPressed: widget.onShowPlaybackSettings,
+              ),
+              IconButton(
                 tooltip: 'Playlist',
                 icon: Icon(
                   Icons.queue_music_rounded,
-                  color: activeDrawer == ActiveDrawerPanel.playlist
+                  color: widget.activeDrawer == ActiveDrawerPanel.playlist
                       ? const Color(0xFFF59E0B)
                       : Colors.white,
                 ),
                 onPressed: () => ref.read(activeDrawerProvider.notifier).state =
-                    activeDrawer == ActiveDrawerPanel.playlist
+                    widget.activeDrawer == ActiveDrawerPanel.playlist
                         ? ActiveDrawerPanel.none
                         : ActiveDrawerPanel.playlist,
               ),
@@ -822,12 +915,12 @@ class _BottomControlsBar extends ConsumerWidget {
                 tooltip: 'Audio equalizer and sync',
                 icon: Icon(
                   Icons.graphic_eq_rounded,
-                  color: activeDrawer == ActiveDrawerPanel.audio
+                  color: widget.activeDrawer == ActiveDrawerPanel.audio
                       ? const Color(0xFFF59E0B)
                       : Colors.white,
                 ),
                 onPressed: () => ref.read(activeDrawerProvider.notifier).state =
-                    activeDrawer == ActiveDrawerPanel.audio
+                    widget.activeDrawer == ActiveDrawerPanel.audio
                         ? ActiveDrawerPanel.none
                         : ActiveDrawerPanel.audio,
               ),
@@ -835,12 +928,12 @@ class _BottomControlsBar extends ConsumerWidget {
                 tooltip: 'Subtitle framing and sync',
                 icon: Icon(
                   Icons.subtitles_rounded,
-                  color: activeDrawer == ActiveDrawerPanel.subtitles
+                  color: widget.activeDrawer == ActiveDrawerPanel.subtitles
                       ? const Color(0xFFF59E0B)
                       : Colors.white,
                 ),
                 onPressed: () => ref.read(activeDrawerProvider.notifier).state =
-                    activeDrawer == ActiveDrawerPanel.subtitles
+                    widget.activeDrawer == ActiveDrawerPanel.subtitles
                         ? ActiveDrawerPanel.none
                         : ActiveDrawerPanel.subtitles,
               ),

@@ -67,6 +67,9 @@ class PlayerService {
 
   Future<void> setVolume(double volume) => player.setVolume(volume);
 
+  Future<void> setPrecisionSeeking(bool enabled) =>
+      MpvProperties.setProperty(player, 'hr-seek', enabled ? 'yes' : 'no');
+
   Future<void> setAudioTrack(AudioTrack track) => player.setAudioTrack(track);
 
   Future<void> setVideoTrack(VideoTrack track) => player.setVideoTrack(track);

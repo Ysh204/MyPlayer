@@ -58,20 +58,38 @@ class PlaybackControlsState {
 
 class PlaybackNotifier extends StateNotifier<PlaybackControlsState> {
   final PlayerService _playerService;
+  Duration? _pendingSeekTarget;
+  Timer? _seekCommitTimer;
+  Timer? _pendingSeekExpiryTimer;
 
   PlaybackNotifier(this._playerService) : super(const PlaybackControlsState());
 
-  Future<void> openFile(String path) => _playerService.openFile(path);
+  Future<void> openFile(String path) {
+    _clearPendingSeek();
+    return _playerService.openFile(path);
+  }
 
-  Future<void> openFiles(List<String> paths) => _playerService.openFiles(paths);
+  Future<void> openFiles(List<String> paths) {
+    _clearPendingSeek();
+    return _playerService.openFiles(paths);
+  }
 
   Future<void> addToQueue(String path) => _playerService.addToQueue(path);
 
-  Future<void> next() => _playerService.next();
+  Future<void> next() {
+    _clearPendingSeek();
+    return _playerService.next();
+  }
 
-  Future<void> previous() => _playerService.previous();
+  Future<void> previous() {
+    _clearPendingSeek();
+    return _playerService.previous();
+  }
 
-  Future<void> stop() => _playerService.stop();
+  Future<void> stop() {
+    _clearPendingSeek();
+    return _playerService.stop();
+  }
 
   Future<void> jumpTo(int index) => _playerService.jumpTo(index);
 
@@ -87,11 +105,25 @@ class PlaybackNotifier extends StateNotifier<PlaybackControlsState> {
 
   Future<void> playOrPause() => _playerService.playOrPause();
 
-  Future<void> seekTo(Duration position) => _playerService.seek(position);
+  Future<void> seekTo(Duration position) {
+    final target = _boundedPosition(position);
+    _seekCommitTimer?.cancel();
+    _seekCommitTimer = null;
+    _rememberSeekTarget(target);
+    return _playerService.seek(target);
+  }
 
   Future<void> seekBy(Duration offset) {
-    final currentPosition = _playerService.player.state.position;
-    return _playerService.seek(currentPosition + offset);
+    final currentPosition =
+        _pendingSeekTarget ?? _playerService.player.state.position;
+    final target = _boundedPosition(currentPosition + offset);
+    _rememberSeekTarget(target);
+    _seekCommitTimer?.cancel();
+    _seekCommitTimer = Timer(const Duration(milliseconds: 75), () {
+      _seekCommitTimer = null;
+      unawaited(_playerService.seek(target));
+    });
+    return Future<void>.value();
   }
 
   Future<void> setRate(double rate) async {
@@ -101,8 +133,34 @@ class PlaybackNotifier extends StateNotifier<PlaybackControlsState> {
 
   Future<void> setVolume(double volume) async {
     final safeVolume = volume.clamp(0.0, 150.0).toDouble();
-    await _playerService.setVolume(safeVolume);
     state = state.copyWith(volume: safeVolume);
+    await _playerService.setVolume(safeVolume);
+  }
+
+  Future<void> changeVolumeBy(double step) => setVolume(state.volume + step);
+
+  Duration _boundedPosition(Duration position) {
+    final safePosition = position.isNegative ? Duration.zero : position;
+    final duration = _playerService.player.state.duration;
+    if (duration > Duration.zero && safePosition > duration) return duration;
+    return safePosition;
+  }
+
+  void _rememberSeekTarget(Duration target) {
+    _pendingSeekTarget = target;
+    _pendingSeekExpiryTimer?.cancel();
+    _pendingSeekExpiryTimer = Timer(const Duration(milliseconds: 1200), () {
+      _pendingSeekTarget = null;
+      _pendingSeekExpiryTimer = null;
+    });
+  }
+
+  void _clearPendingSeek() {
+    _seekCommitTimer?.cancel();
+    _seekCommitTimer = null;
+    _pendingSeekExpiryTimer?.cancel();
+    _pendingSeekExpiryTimer = null;
+    _pendingSeekTarget = null;
   }
 
   Future<void> setAudioTrack(AudioTrack track) =>
@@ -116,6 +174,12 @@ class PlaybackNotifier extends StateNotifier<PlaybackControlsState> {
 
   Future<void> loadExternalAudio(String path) =>
       _playerService.loadExternalAudio(path);
+
+  @override
+  void dispose() {
+    _clearPendingSeek();
+    super.dispose();
+  }
 }
 
 final playbackProvider =
