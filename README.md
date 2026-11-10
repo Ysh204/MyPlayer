@@ -92,6 +92,38 @@ build/windows/x64/runner/Release/
 flutter test
 ```
 
+## Setting as Default Player
+
+### Option 1: File Association (Quickest)
+
+1. Right-click any video file (`.mp4`, `.mkv`, `.avi`, etc.) in File Explorer.
+2. Select **Open with** > **Choose another app**.
+3. Select **Always** (or check "Always use this app to open files").
+4. Click **Choose an app on your PC** and browse to `my_player.exe` in:
+   ```
+   build\windows\x64\runner\Release\my_player.exe
+   ```
+
+### Option 2: Register in Windows Settings
+
+Run the registration helper to register MyPlayer Pro with Windows Default Programs (no administrator privileges required):
+
+```powershell
+.\tools\register_player.ps1
+```
+
+Or double-click `tools\register_player.bat`. Once registered:
+
+1. Open Windows **Settings** (`Win + I`).
+2. Go to **Apps** > **Default apps**.
+3. Search for **MyPlayer Pro** or individual file types (`.mp4`, `.mkv`) and set it as default.
+
+To remove the registration at any time, run:
+
+```powershell
+.\tools\unregister_player.ps1
+```
+
 ## Architecture
 
 The codebase separates the media backend, application state, and UI:
