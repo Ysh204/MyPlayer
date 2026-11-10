@@ -1,138 +1,93 @@
-# 🎬 MyPlayer Pro
+# MyPlayer Pro
 
-A minimal, polished desktop media player for **Windows** built with Flutter, Riverpod, and `media_kit` (libmpv). Designed with a focus on simplicity, restrained dark aesthetics, responsive playback controls, and smooth keyboard navigation.
+A lightweight Windows desktop video player built with Flutter, Riverpod, and libmpv (`media_kit`).
 
----
+## Features
 
-## ✨ Features
+- **Minimal HUD Playbar**: Centered floating controls bar with volume, playback controls, seek slider, and track settings. Auto-hides with the mouse cursor during playback.
+- **Seeking Controls**:
+  - Separate buttons for seeking and playlist track navigation.
+  - Keyboard seeking with input coalescing to prevent queued seek operations during rapid key presses.
+  - Drag-and-release seek bar with local time scrub preview.
+- **Volume & Mute**:
+  - Volume slider synchronized with keyboard controls (Up/Down arrows).
+  - Quick mute toggle (M key or volume icon click) with previous volume restoration.
+- **Fast Exit**: Window close events are intercepted to mute and stop the player immediately without trailing audio buffer playback.
+- **On-Screen Display (OSD)**: Feedback overlay for seek offsets, volume changes, playback rate, and loaded media.
+- **Configurable Shortcuts**:
+  - Adjustable seek step (seconds) and volume step (percentage).
+  - Customizable key bindings with conflict detection and persistence via SharedPreferences.
+- **Audio Controls**:
+  - 5-band equalizer with presets and preamp adjustment.
+  - Dynamic range compressor (night mode) and audio delay synchronization.
+- **Subtitle Controls**:
+  - Subtitle vertical position, font size, and background opacity controls.
+  - Subtitle delay timing adjustment.
+  - Supports embedded tracks and external subtitle files (`.srt`, `.ass`, `.vtt`).
+- **Context Menu**:
+  - Right-click menu for track selection, playback speed, aspect ratio, and frame capture.
+  - Includes explicit Auto and Off options for audio and subtitle streams.
+  - Closes automatically when clicking anywhere outside the menu.
+- **Drag and Drop & Playlists**:
+  - Drag media files directly into the window.
+  - Reorderable playlist panel with track queue management.
 
-- **Floating Minimalist Playbar**: An IINA-inspired dark glass capsule floating subtly above the video. Auto-hides along with the mouse cursor after 3 seconds of inactivity.
-- **Predictable & Coalesced Seeking**:
-  - Dedicated seek backward and forward buttons separate from playlist navigation.
-  - Left/Right keyboard seeking with intelligent 90ms coalescing—rapid key presses accumulate into a single smooth seek without queuing choppy jumps.
-  - 60fps scrub feedback on the seek bar, dispatching the seek command only when the slider thumb is released.
-- **Bidirectional Volume & Instant Mute**:
-  - Full synchronization between keyboard controls (<kbd>↑</kbd>/<kbd>↓</kbd>), the playbar volume slider, and on-screen indicators.
-  - Toggle mute with <kbd>M</kbd> or by clicking the volume icon, with previous volume memory.
-- **Clean Shutdown (Zero Audio Lag)**: Intercepts the native Windows close event to instantaneously cut off hardware audio (0ms delay), preventing trailing audio when exiting.
-- **On-Screen Display (OSD) HUD**: An unobtrusive, centered dark pill that displays immediate feedback for seeking (`±5s [01:23 / 05:40]`), volume levels with progress bars, playback rate, and loaded track names.
-- **Customizable Shortcuts & Conflict Prevention**:
-  - Customize seek step (2s–60s) and volume step (1%–20%).
-  - Rebind keys with validation that prevents duplicate assignments and protects reserved system keys (<kbd>Space</kbd>, <kbd>F</kbd>, <kbd>M</kbd>, <kbd>Esc</kbd>).
-  - Persists all settings between app launches via `SharedPreferences`.
-- **Audio Equalizer & Night Mode**:
-  - 5-band graphic equalizer with presets (Flat, Rock, Pop, Classical, Voice, Bass Boost) and preamp control.
-  - Night Mode dynamic compression (boosts quiet dialogue and levels loud action scenes).
-  - Sub-second audio sync delay adjustment.
-- **Subtitle Framing & Sync**:
-  - Adjust vertical position (including moving subtitles into the bottom letterbox area).
-  - Custom font size scaling, background box opacity, and sub-millisecond delay sync.
-  - Supports embedded subtitles as well as loading external `.srt`, `.ass`, `.ssa`, and `.vtt` files.
-- **Streamlined Context Menu**:
-  - Right-click anywhere for quick access to tracks, filters, aspect ratios, and media properties.
-  - Guarantees **Automatic** and **Off (Disable)** options for both audio and subtitle streams.
-  - Automatically vanishes when clicking anywhere outside the menu.
-- **Drag-and-Drop & Playlists**:
-  - Drop single media files or multiple tracks directly into the window to play or queue.
-  - Side playlist panel with item counters, drag-to-reorder, and individual track removal.
+## Keyboard Shortcuts
 
----
+| Action | Key |
+| --- | --- |
+| Play / Pause | Space |
+| Seek Backward | Left Arrow (configurable) |
+| Seek Forward | Right Arrow (configurable) |
+| Volume Up | Up Arrow (configurable) |
+| Volume Down | Down Arrow (configurable) |
+| Toggle Mute | M |
+| Toggle Fullscreen | F or F11 (or double-click video) |
+| Exit Fullscreen / Close Panel | Escape |
+| Open File | Ctrl + O |
+| Context Menu | Right-Click |
+| Close Application | Alt + F4 |
 
-## ⌨️ Keyboard Shortcuts
+## Building and Running
 
-| Action | Shortcut |
-| :--- | :--- |
-| **Play / Pause** | <kbd>Space</kbd> |
-| **Seek Backward** | <kbd>←</kbd> (Default 5s, customizable) |
-| **Seek Forward** | <kbd>→</kbd> (Default 5s, customizable) |
-| **Volume Up** | <kbd>↑</kbd> (Default 5%, customizable) |
-| **Volume Down** | <kbd>↓</kbd> (Default 5%, customizable) |
-| **Toggle Mute** | <kbd>M</kbd> |
-| **Toggle Fullscreen** | <kbd>F</kbd> / <kbd>F11</kbd> / Double-Click Video |
-| **Exit Fullscreen / Close Drawer** | <kbd>Esc</kbd> |
-| **Open Media File** | <kbd>Ctrl</kbd> + <kbd>O</kbd> |
-| **Context Menu** | Right-Click |
-| **Exit Application** | <kbd>Alt</kbd> + <kbd>F4</kbd> |
+### Requirements
 
----
+- Flutter SDK 3.4.0 or newer
+- Visual Studio 2022 with the "Desktop development with C++" workload
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Flutter SDK](https://flutter.dev/docs/get-started/install/windows) (>=3.4.0 <4.0.0)
-- Visual Studio 2022 with **Desktop development with C++** workload installed
-
-### Run in Development Mode
+### Run in Debug Mode
 
 ```bash
-# Clone the repository
-git clone https://github.com/Ysh204/MyPlayer.git
-cd MyPlayer
-
-# Fetch dependencies
 flutter pub get
-
-# Run on Windows desktop
 flutter run -d windows
 ```
 
-### Build Portable Release Executable
+### Build Release
 
 ```bash
 flutter build windows
 ```
 
-The compiled release will be generated at:
+The output executable and dependencies are generated in:
+
 ```
 build/windows/x64/runner/Release/
 ```
 
-To run directly:
-```powershell
-.\build\windows\x64\runner\Release\my_player.exe
-```
-
----
-
-## 🏗️ Architecture
-
-```
-lib/
-├── app.dart                   # MaterialApp configuration and global dark theme
-├── main.dart                  # Window initialization, size constraints, and close prevention
-├── core/
-│   ├── theme/app_theme.dart   # Refined dark theme, desktop sliders, and tooltip styling
-│   └── utils/time_formatter.dart # Tabular duration formatting
-├── data/models/               # State models for Equalizer, Presets, and Subtitles
-├── features/
-│   ├── audio/                 # Equalizer panel, audio DSP filters, and presets
-│   ├── player/
-│   │   ├── providers/         # PlaybackNotifier, OSD state, and shortcut preference persistence
-│   │   ├── screens/           # PlayerScreen, floating HUD controls, and empty state
-│   │   └── widgets/           # Track picker, OSD overlay
-│   ├── playlist/              # Playlist drawer with reordering and queue management
-│   ├── settings/              # Shortcut re-binding and playback settings dialog
-│   └── subtitles/             # Subtitle framing, styling, and sync controls
-└── services/
-    ├── player_service.dart    # Central abstraction layer for libmpv / media_kit
-    ├── mpv_properties.dart    # Low-level libmpv native property bridge
-    ├── subtitle_service.dart  # Subtitle track and framing service
-    └── audio_filter_builder.dart # lavfi audio filter graph generation
-```
-
----
-
-## 🧪 Testing
-
-Run the automated test suite covering duration formatting, track labeling, OSD notifications, and shortcut validation:
+### Running Tests
 
 ```bash
 flutter test
 ```
 
----
+## Architecture
 
-## 📄 License
+The codebase separates the media backend, application state, and UI:
 
-This project is open-source and available under the [MIT License](LICENSE).
+- `lib/services/`: Direct interaction with libmpv and native properties via `PlayerService`.
+- `lib/features/*/providers/`: Riverpod state notifiers managing playback state, audio filters, preferences, and UI state.
+- `lib/features/*/widgets/` and `lib/features/*/screens/`: Presentation widgets, custom sliders, panels, and floating controls.
+
+## License
+
+This project is licensed under the MIT License.
