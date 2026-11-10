@@ -6,10 +6,25 @@ import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
+import 'features/player/providers/player_provider.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+
+  String? screenshotPath;
+  ActiveDrawerPanel? initialDrawer;
+  for (final arg in args) {
+    if (arg.startsWith('--screenshot=')) {
+      screenshotPath = arg.substring('--screenshot='.length);
+    } else if (arg == '--drawer=audio' || arg == '--drawer=equalizer') {
+      initialDrawer = ActiveDrawerPanel.audio;
+    } else if (arg == '--drawer=playlist') {
+      initialDrawer = ActiveDrawerPanel.playlist;
+    } else if (arg == '--drawer=subtitles') {
+      initialDrawer = ActiveDrawerPanel.subtitles;
+    }
+  }
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
@@ -27,5 +42,12 @@ Future<void> main() async {
     await windowManager.setPreventClose(true);
   }
 
-  runApp(const ProviderScope(child: MyPlayerApp()));
+  runApp(
+    ProviderScope(
+      child: MyPlayerApp(
+        screenshotPath: screenshotPath,
+        initialDrawer: initialDrawer,
+      ),
+    ),
+  );
 }

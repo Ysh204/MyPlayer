@@ -2,6 +2,18 @@
 
 A lightweight Windows desktop video player built with Flutter, Riverpod, and libmpv (`media_kit`).
 
+## Screenshots
+
+### Main Interface
+Floating HUD playback controls, responsive seek scrub, and minimalist file drop card.
+
+![MyPlayer Pro Main Interface](assets/screenshots/main_interface.png)
+
+### Audio Equalizer & DSP Panel
+Graphic equalizer with presets, preamp gain control, night mode dynamic range compression, and audio delay sync.
+
+![Audio Equalizer and DSP](assets/screenshots/audio_equalizer.png)
+
 ## Features
 
 - **Minimal HUD Playbar**: Centered floating controls bar with volume, playback controls, seek slider, and track settings. Auto-hides with the mouse cursor during playback.
@@ -25,7 +37,7 @@ A lightweight Windows desktop video player built with Flutter, Riverpod, and lib
   - Subtitle delay timing adjustment.
   - Supports embedded tracks and external subtitle files (`.srt`, `.ass`, `.vtt`).
 - **Context Menu**:
-  - Right-click menu for track selection, playback speed, aspect ratio, and frame capture.
+  - Right-Click menu for track selection, playback speed, aspect ratio, and frame capture.
   - Includes explicit Auto and Off options for audio and subtitle streams.
   - Closes automatically when clicking anywhere outside the menu.
 - **Drag and Drop & Playlists**:
