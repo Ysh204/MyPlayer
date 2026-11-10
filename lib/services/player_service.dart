@@ -23,6 +23,29 @@ class PlayerService {
     subtitleService = SubtitleService(player);
   }
 
+  // Stream accessors for player state
+  Stream<Playlist> get playlistStream => player.stream.playlist;
+  Stream<bool> get playingStream => player.stream.playing;
+  Stream<bool> get completedStream => player.stream.completed;
+  Stream<Duration> get positionStream => player.stream.position;
+  Stream<Duration> get durationStream => player.stream.duration;
+  Stream<Duration> get bufferStream => player.stream.buffer;
+  Stream<bool> get bufferingStream => player.stream.buffering;
+  Stream<double> get volumeStream => player.stream.volume;
+  Stream<double> get rateStream => player.stream.rate;
+  Stream<Tracks> get tracksStream => player.stream.tracks;
+  Stream<Track> get currentTrackStream => player.stream.track;
+  Stream<String> get errorStream => player.stream.error;
+
+  Duration get currentPosition => player.state.position;
+  Duration get currentDuration => player.state.duration;
+  Playlist get currentPlaylist => player.state.playlist;
+  Tracks get currentTracks => player.state.tracks;
+  Track get currentTrack => player.state.track;
+  double get currentVolume => player.state.volume;
+  double get currentRate => player.state.rate;
+  bool get isPlaying => player.state.playing;
+
   Future<void> openFile(String path) => player.open(Media(path));
 
   Future<void> openFiles(List<String> paths) {

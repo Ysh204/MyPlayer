@@ -9,18 +9,23 @@ class AudioTrackPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final available = ref.watch(playerTracksProvider).valueOrNull?.audio;
-    final tracks = available == null || available.isEmpty
-        ? const [AudioTrack('auto', null, null), AudioTrack('no', null, null)]
-        : available;
+    final available = ref.watch(playerTracksProvider).valueOrNull?.audio ?? const [];
     final selected = ref.watch(playerCurrentTrackProvider).valueOrNull?.audio;
-    final selectedId = tracks.any((track) => track.id == selected?.id)
+
+    // Always include Auto and Off options
+    final trackList = <AudioTrack>[
+      AudioTrack.auto(),
+      AudioTrack.no(),
+      ...available.where((t) => t.id != 'auto' && t.id != 'no'),
+    ];
+
+    final selectedId = trackList.any((t) => t.id == selected?.id)
         ? selected!.id
-        : tracks.first.id;
+        : trackList.first.id;
 
     return _TrackPickerDropdown(
       label: 'Audio track',
-      tracks: tracks
+      tracks: trackList
           .map((track) => _TrackOption(
                 track.id,
                 trackLabel(
@@ -34,7 +39,7 @@ class AudioTrackPicker extends ConsumerWidget {
           .toList(growable: false),
       selectedId: selectedId,
       onSelected: (id) {
-        final track = tracks.firstWhere((item) => item.id == id);
+        final track = trackList.firstWhere((item) => item.id == id);
         ref.read(playbackProvider.notifier).setAudioTrack(track);
       },
     );
@@ -46,22 +51,25 @@ class SubtitleTrackPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final available = ref.watch(playerTracksProvider).valueOrNull?.subtitle;
-    final tracks = available == null || available.isEmpty
-        ? const [
-            SubtitleTrack('auto', null, null),
-            SubtitleTrack('no', null, null),
-          ]
-        : available;
+    final available =
+        ref.watch(playerTracksProvider).valueOrNull?.subtitle ?? const [];
     final selected =
         ref.watch(playerCurrentTrackProvider).valueOrNull?.subtitle;
-    final selectedId = tracks.any((track) => track.id == selected?.id)
+
+    // Always include Auto and Off options
+    final trackList = <SubtitleTrack>[
+      SubtitleTrack.auto(),
+      SubtitleTrack.no(),
+      ...available.where((t) => t.id != 'auto' && t.id != 'no'),
+    ];
+
+    final selectedId = trackList.any((t) => t.id == selected?.id)
         ? selected!.id
-        : tracks.first.id;
+        : trackList.first.id;
 
     return _TrackPickerDropdown(
       label: 'Subtitle track',
-      tracks: tracks
+      tracks: trackList
           .map((track) => _TrackOption(
                 track.id,
                 trackLabel(
@@ -75,7 +83,7 @@ class SubtitleTrackPicker extends ConsumerWidget {
           .toList(growable: false),
       selectedId: selectedId,
       onSelected: (id) {
-        final track = tracks.firstWhere((item) => item.id == id);
+        final track = trackList.firstWhere((item) => item.id == id);
         ref.read(playbackProvider.notifier).setSubtitleTrack(track);
       },
     );
@@ -100,23 +108,51 @@ class _TrackPickerDropdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13)),
-        DropdownButton<String>(
-          value: selectedId,
-          isExpanded: true,
-          isDense: true,
-          underline: const SizedBox.shrink(),
-          items: tracks
-              .map(
-                (track) => DropdownMenuItem(
-                  value: track.id,
-                  child: Text(track.label, overflow: TextOverflow.ellipsis),
-                ),
-              )
-              .toList(growable: false),
-          onChanged: (id) {
-            if (id != null) onSelected(id);
-          },
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF22222A),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFF333342)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: selectedId,
+              isExpanded: true,
+              isDense: true,
+              dropdownColor: const Color(0xFF22222A),
+              borderRadius: BorderRadius.circular(8),
+              style: const TextStyle(fontSize: 12.5, color: Colors.white),
+              items: tracks
+                  .map(
+                    (track) => DropdownMenuItem(
+                      value: track.id,
+                      child: Text(
+                        track.label,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: track.id == selectedId
+                              ? const Color(0xFFF59E0B)
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: (id) {
+                if (id != null) onSelected(id);
+              },
+            ),
+          ),
         ),
       ],
     );
@@ -137,8 +173,8 @@ String trackLabel(
   String? codec,
   bool? isDefault,
 }) {
-  if (id == 'auto') return 'Automatic';
-  if (id == 'no') return 'Off';
+  if (id == 'auto') return 'Automatic (Default)';
+  if (id == 'no') return 'Off (Disabled)';
 
   final parts = <String>[];
   final cleanTitle = title?.trim();

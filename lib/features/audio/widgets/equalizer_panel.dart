@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/eq_state.dart';
+import '../../player/providers/player_provider.dart';
 import '../../player/widgets/track_picker.dart';
 import '../providers/audio_provider.dart';
 
@@ -15,57 +16,82 @@ class EqualizerPanel extends ConsumerWidget {
     final presets = ref.watch(eqPresetsProvider);
 
     return Container(
-      width: 360,
-      padding: const EdgeInsets.all(20),
+      width: 380,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: const BoxDecoration(
-        color: Color.fromRGBO(18, 18, 21, 0.94),
-        border: Border(left: BorderSide(color: Colors.white12)),
+        color: Color(0xF214141A),
+        border: Border(left: BorderSide(color: Color(0xFF2E2E3C))),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 16,
+            offset: Offset(-4, 0),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'AUDIO DSP & EQUALIZER',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
+              const Icon(Icons.graphic_eq_rounded,
+                  size: 20, color: Color(0xFFF59E0B)),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'AUDIO EQUALIZER & DSP',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                    fontSize: 13,
+                  ),
+                ),
               ),
               TextButton(
-                  onPressed: notifier.resetAll, child: const Text('Reset')),
+                onPressed: notifier.resetAll,
+                child: const Text('Reset'),
+              ),
+              IconButton(
+                tooltip: 'Close panel',
+                iconSize: 20,
+                onPressed: () => ref
+                    .read(activeDrawerProvider.notifier)
+                    .state = ActiveDrawerPanel.none,
+                icon: const Icon(Icons.close_rounded),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const Divider(color: Color(0xFF2E2E3C), height: 16),
           const AudioTrackPicker(),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           presets.when(
             data: (items) => Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 6,
+              runSpacing: 6,
               children: items
                   .map((preset) => _presetChip(eq, notifier, preset))
                   .toList(),
             ),
             loading: () => const SizedBox(
-              height: 32,
-              child: Center(child: LinearProgressIndicator()),
+              height: 28,
+              child: Center(child: LinearProgressIndicator(minHeight: 2)),
             ),
             error: (error, stackTrace) => const Text(
               'Could not load EQ presets.',
               style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ),
-          const Divider(height: 28, color: Colors.white12),
+          const Divider(height: 24, color: Color(0xFF2E2E3C)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Preamp Boost', style: TextStyle(fontSize: 13)),
+              const Text('Preamp Boost', style: TextStyle(fontSize: 12.5)),
               Text(
                 '${eq.preampDb >= 0 ? '+' : ''}${eq.preampDb.toStringAsFixed(1)} dB',
                 style: const TextStyle(
                   color: Color(0xFFF59E0B),
                   fontWeight: FontWeight.w600,
+                  fontSize: 12.5,
                 ),
               ),
             ],
@@ -76,7 +102,7 @@ class EqualizerPanel extends ConsumerWidget {
             max: 12.0,
             onChanged: notifier.setPreamp,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -115,14 +141,15 @@ class EqualizerPanel extends ConsumerWidget {
               }),
             ),
           ),
-          const Divider(height: 24, color: Colors.white12),
-          SwitchListTile(
+          const Divider(height: 20, color: Color(0xFF2E2E3C)),
+          SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Night Mode (Compressor)',
-                style: TextStyle(fontSize: 13)),
+            activeTrackColor: const Color(0xFFF59E0B),
+            title: const Text('Night Mode (Dynamic Compression)',
+                style: TextStyle(fontSize: 12.5)),
             subtitle: const Text(
-              'Boosts whispers, tames loud explosions',
-              style: TextStyle(fontSize: 11),
+              'Levels dialogue and softens loud sound effects',
+              style: TextStyle(fontSize: 11, color: Colors.white54),
             ),
             value: eq.compressor,
             onChanged: notifier.toggleCompressor,
@@ -130,16 +157,21 @@ class EqualizerPanel extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Audio Sync: ${(eq.audioDelaySec * 1000).round()} ms'),
+              Text(
+                'Audio Sync: ${(eq.audioDelaySec * 1000).round()} ms',
+                style: const TextStyle(fontSize: 12.5),
+              ),
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, size: 20),
+                    tooltip: 'Decrease audio delay by 50ms',
+                    icon: const Icon(Icons.remove_circle_outline, size: 18),
                     onPressed: () =>
                         notifier.setAudioDelay(eq.audioDelaySec - 0.05),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline, size: 20),
+                    tooltip: 'Increase audio delay by 50ms',
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
                     onPressed: () =>
                         notifier.setAudioDelay(eq.audioDelaySec + 0.05),
                   ),
@@ -153,9 +185,14 @@ class EqualizerPanel extends ConsumerWidget {
   }
 
   Widget _presetChip(EqState eq, AudioNotifier notifier, EqPreset preset) {
+    final isSelected = eq.activePreset == preset.name;
     return ChoiceChip(
-      label: Text(preset.name, style: const TextStyle(fontSize: 12)),
-      selected: eq.activePreset == preset.name,
+      label: Text(preset.name, style: const TextStyle(fontSize: 11.5)),
+      selected: isSelected,
+      selectedColor: const Color(0x3DF59E0B),
+      side: BorderSide(
+        color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFF333342),
+      ),
       onSelected: (_) => notifier.applyPreset(preset),
     );
   }

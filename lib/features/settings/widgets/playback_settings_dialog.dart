@@ -12,25 +12,49 @@ class PlaybackSettingsDialog extends ConsumerWidget {
     WidgetRef ref,
     PlaybackShortcut shortcut,
   ) async {
+    final notifier = ref.read(playbackPreferencesProvider.notifier);
     final key = await showDialog<LogicalKeyboardKey>(
       context: context,
       builder: (_) => const _CaptureShortcutDialog(),
     );
     if (key == null || !context.mounted) return;
 
-    final label = key.keyLabel.isNotEmpty
-        ? key.keyLabel
-        : key.debugName ?? 'Key ${key.keyId.toRadixString(16)}';
-    final accepted = await ref
-        .read(playbackPreferencesProvider.notifier)
-        .setShortcut(shortcut, key, label);
+    final label = _formatKeyLabel(key);
+    final validation = notifier.validateShortcut(shortcut, key);
+    if (!validation.success) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(validation.conflictMessage ?? 'Key cannot be assigned.'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+      return;
+    }
+
+    final accepted = await notifier.setShortcut(shortcut, key, label);
     if (!accepted && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('That key is already assigned or reserved.'),
+          backgroundColor: Color(0xFFEF4444),
         ),
       );
     }
+  }
+
+  String _formatKeyLabel(LogicalKeyboardKey key) {
+    if (key == LogicalKeyboardKey.arrowLeft) return 'Left Arrow';
+    if (key == LogicalKeyboardKey.arrowRight) return 'Right Arrow';
+    if (key == LogicalKeyboardKey.arrowUp) return 'Up Arrow';
+    if (key == LogicalKeyboardKey.arrowDown) return 'Down Arrow';
+    if (key == LogicalKeyboardKey.pageUp) return 'Page Up';
+    if (key == LogicalKeyboardKey.pageDown) return 'Page Down';
+    if (key == LogicalKeyboardKey.home) return 'Home';
+    if (key == LogicalKeyboardKey.end) return 'End';
+    if (key.keyLabel.isNotEmpty) return key.keyLabel.toUpperCase();
+    return key.debugName ?? 'Key 0x${key.keyId.toRadixString(16)}';
   }
 
   @override
@@ -39,9 +63,15 @@ class PlaybackSettingsDialog extends ConsumerWidget {
     final notifier = ref.read(playbackPreferencesProvider.notifier);
 
     return AlertDialog(
-      title: const Text('Playback & shortcuts'),
+      title: const Row(
+        children: [
+          Icon(Icons.tune_rounded, size: 20, color: Color(0xFFF59E0B)),
+          SizedBox(width: 8),
+          Text('Playback & Shortcuts'),
+        ],
+      ),
       content: SizedBox(
-        width: 460,
+        width: 480,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -49,10 +79,12 @@ class PlaybackSettingsDialog extends ConsumerWidget {
             children: [
               _SettingsRow(
                 title: 'Skip amount',
-                subtitle: 'Distance moved by the seek keys',
+                subtitle: 'Seconds to seek on each seek-key press or skip button',
                 trailing: DropdownButton<int>(
                   value: preferences.seekStepSeconds,
-                  items: const [2, 3, 5, 10, 15, 30]
+                  borderRadius: BorderRadius.circular(8),
+                  dropdownColor: const Color(0xFF22222A),
+                  items: const [2, 3, 5, 10, 15, 30, 60]
                       .map((seconds) => DropdownMenuItem(
                             value: seconds,
                             child: Text('$seconds sec'),
@@ -65,9 +97,11 @@ class PlaybackSettingsDialog extends ConsumerWidget {
               ),
               _SettingsRow(
                 title: 'Volume key step',
-                subtitle: 'Volume change for each key press',
+                subtitle: 'Volume percentage change on each volume-key press',
                 trailing: DropdownButton<double>(
                   value: preferences.volumeStepPercent,
+                  borderRadius: BorderRadius.circular(8),
+                  dropdownColor: const Color(0xFF22222A),
                   items: const [1.0, 2.0, 5.0, 10.0, 15.0, 20.0]
                       .map((step) => DropdownMenuItem(
                             value: step,
@@ -81,16 +115,30 @@ class PlaybackSettingsDialog extends ConsumerWidget {
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
+                activeTrackColor: const Color(0xFFF59E0B),
                 title: const Text('Frame-accurate seeking'),
-                subtitle:
-                    const Text('Seek to the requested frame more closely'),
+                subtitle: Text(
+                  'Seek to the requested keyframe or exact frame more closely',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white60,
+                      ),
+                ),
                 value: preferences.precisionSeeking,
                 onChanged: notifier.setPrecisionSeeking,
               ),
-              const Divider(height: 24),
-              const Text(
-                'Keyboard shortcuts',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              const Divider(height: 28, color: Color(0xFF2E2E3C)),
+              const Row(
+                children: [
+                  Text(
+                    'Customizable Shortcuts',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
+                  ),
+                  Spacer(),
+                  Text(
+                    'Click to rebind',
+                    style: TextStyle(fontSize: 11, color: Colors.white54),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               _ShortcutSettingRow(
@@ -135,10 +183,20 @@ class PlaybackSettingsDialog extends ConsumerWidget {
       ),
       actions: [
         TextButton(
-          onPressed: notifier.reset,
+          onPressed: () async {
+            await notifier.reset();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Settings restored to defaults.'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
           child: const Text('Restore defaults'),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Done'),
         ),
@@ -161,19 +219,20 @@ class _SettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title),
+                Text(title, style: const TextStyle(fontSize: 13.5)),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white60,
+                        fontSize: 11.5,
                       ),
                 ),
               ],
@@ -204,10 +263,28 @@ class _ShortcutSettingRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Expanded(child: Text(title)),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
           OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              side: const BorderSide(color: Color(0xFF3B3B4A)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
             onPressed: onPressed,
-            child: Text(keyLabel),
+            child: Text(
+              keyLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFF59E0B),
+              ),
+            ),
           ),
         ],
       ),
@@ -264,14 +341,31 @@ class _CaptureShortcutDialogState extends State<_CaptureShortcutDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Assign shortcut'),
+      title: const Text('Assign Shortcut'),
       content: KeyboardListener(
         focusNode: _focusNode,
         onKeyEvent: _onKeyEvent,
         child: const SizedBox(
           width: 320,
-          height: 54,
-          child: Center(child: Text('Press any key, or Esc to cancel')),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.keyboard_outlined, size: 36, color: Color(0xFFF59E0B)),
+                SizedBox(height: 12),
+                Text(
+                  'Press any key on your keyboard',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Press Esc to cancel',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       actions: [

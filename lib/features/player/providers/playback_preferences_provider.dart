@@ -26,7 +26,7 @@ class PlaybackPreferences {
 
   const PlaybackPreferences({
     this.seekStepSeconds = 5,
-    this.volumeStepPercent = 5,
+    this.volumeStepPercent = 5.0,
     this.precisionSeeking = true,
     this.seekBackwardKeyId = _arrowLeftKeyId,
     this.seekBackwardKeyLabel = 'Left Arrow',
@@ -69,6 +69,18 @@ class PlaybackPreferences {
   }
 }
 
+class ShortcutAssignmentResult {
+  final bool success;
+  final String? conflictMessage;
+
+  const ShortcutAssignmentResult.ok()
+      : success = true,
+        conflictMessage = null;
+
+  const ShortcutAssignmentResult.conflict(this.conflictMessage)
+      : success = false;
+}
+
 class PlaybackPreferencesNotifier extends StateNotifier<PlaybackPreferences> {
   static const _seekStepKey = 'playback_seek_step_seconds';
   static const _volumeStepKey = 'playback_volume_step_percent';
@@ -81,6 +93,14 @@ class PlaybackPreferencesNotifier extends StateNotifier<PlaybackPreferences> {
   static const _volumeDownKeyLabel = 'shortcut_volume_down_key_label';
   static const _volumeUpKeyId = 'shortcut_volume_up_key_id';
   static const _volumeUpKeyLabel = 'shortcut_volume_up_key_label';
+
+  static final Set<int> reservedKeyIds = {
+    LogicalKeyboardKey.space.keyId,
+    LogicalKeyboardKey.f11.keyId,
+    LogicalKeyboardKey.keyF.keyId,
+    LogicalKeyboardKey.keyM.keyId,
+    LogicalKeyboardKey.escape.keyId,
+  };
 
   PlaybackPreferencesNotifier() : super(PlaybackPreferences.defaults);
 
@@ -130,38 +150,54 @@ class PlaybackPreferencesNotifier extends StateNotifier<PlaybackPreferences> {
     await preferences.setBool(_precisionSeekKey, value);
   }
 
+  ShortcutAssignmentResult validateShortcut(
+    PlaybackShortcut shortcut,
+    LogicalKeyboardKey key,
+  ) {
+    if (reservedKeyIds.contains(key.keyId)) {
+      final name = key.keyLabel.isNotEmpty ? key.keyLabel : 'This key';
+      return ShortcutAssignmentResult.conflict(
+        '$name is reserved for system/player actions (e.g., Space, F, M, Esc, F11).',
+      );
+    }
+
+    final otherShortcuts = <PlaybackShortcut, (int, String)>{
+      PlaybackShortcut.seekBackward: (
+        state.seekBackwardKeyId,
+        'Seek Backward',
+      ),
+      PlaybackShortcut.seekForward: (
+        state.seekForwardKeyId,
+        'Seek Forward',
+      ),
+      PlaybackShortcut.volumeDown: (
+        state.volumeDownKeyId,
+        'Volume Down',
+      ),
+      PlaybackShortcut.volumeUp: (
+        state.volumeUpKeyId,
+        'Volume Up',
+      ),
+    };
+
+    for (final entry in otherShortcuts.entries) {
+      if (entry.key != shortcut && entry.value.$1 == key.keyId) {
+        return ShortcutAssignmentResult.conflict(
+          'Already assigned to "${entry.value.$2}". Choose a different key.',
+        );
+      }
+    }
+
+    return const ShortcutAssignmentResult.ok();
+  }
+
   Future<bool> setShortcut(
     PlaybackShortcut shortcut,
     LogicalKeyboardKey key,
     String label,
   ) async {
-    final otherKeys = switch (shortcut) {
-      PlaybackShortcut.seekBackward => [
-          state.seekForwardKeyId,
-          state.volumeDownKeyId,
-          state.volumeUpKeyId,
-        ],
-      PlaybackShortcut.seekForward => [
-          state.seekBackwardKeyId,
-          state.volumeDownKeyId,
-          state.volumeUpKeyId,
-        ],
-      PlaybackShortcut.volumeDown => [
-          state.seekBackwardKeyId,
-          state.seekForwardKeyId,
-          state.volumeUpKeyId,
-        ],
-      PlaybackShortcut.volumeUp => [
-          state.seekBackwardKeyId,
-          state.seekForwardKeyId,
-          state.volumeDownKeyId,
-        ],
-    };
-    final reservedKeys = {
-      LogicalKeyboardKey.space.keyId,
-      LogicalKeyboardKey.f11.keyId,
-    };
-    if (otherKeys.contains(key.keyId) || reservedKeys.contains(key.keyId)) {
+    final validation = validateShortcut(shortcut, key);
+    if (!validation.success) {
       return false;
     }
 
@@ -207,10 +243,7 @@ class PlaybackPreferencesNotifier extends StateNotifier<PlaybackPreferences> {
   Future<void> _saveShortcuts([SharedPreferences? preferences]) async {
     final store = preferences ?? await SharedPreferences.getInstance();
     await store.setInt(_seekBackwardKeyId, state.seekBackwardKeyId);
-    await store.setString(
-      _seekBackwardKeyLabel,
-      state.seekBackwardKeyLabel,
-    );
+    await store.setString(_seekBackwardKeyLabel, state.seekBackwardKeyLabel);
     await store.setInt(_seekForwardKeyId, state.seekForwardKeyId);
     await store.setString(_seekForwardKeyLabel, state.seekForwardKeyLabel);
     await store.setInt(_volumeDownKeyId, state.volumeDownKeyId);
