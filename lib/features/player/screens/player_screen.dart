@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
@@ -1115,14 +1116,14 @@ class _EmptyStateOverlay extends StatelessWidget {
     return Center(
       child: Container(
         width: 360,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 26),
         decoration: BoxDecoration(
-          color: const Color(0xD812141C),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0x22FFFFFF), width: 0.8),
+          color: const Color(0xF4111218),
+          borderRadius: BorderRadius.zero,
+          border: Border.all(color: const Color(0x38FFFFFF), width: 1.0),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x66000000),
+              color: Color(0x88000000),
               blurRadius: 30,
               offset: Offset(0, 8),
             ),
@@ -1132,40 +1133,40 @@ class _EmptyStateOverlay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 54,
-              height: 54,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 color: const Color(0x18FFFFFF),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0x28FFFFFF)),
+                borderRadius: BorderRadius.zero,
+                border: Border.all(color: const Color(0x38FFFFFF)),
               ),
               alignment: Alignment.center,
               child: const Icon(
-                Icons.play_arrow_rounded,
-                size: 28,
-                color: Colors.white70,
+                Icons.play_arrow,
+                size: 26,
+                color: Color(0xFFF59E0B),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             const Text(
               'No Media Loaded',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
                 letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 5),
             const Text(
               'Drop video files here or select an option below',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 color: Colors.white54,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -1175,45 +1176,49 @@ class _EmptyStateOverlay extends StatelessWidget {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10,
+                      vertical: 9,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                   onPressed: onOpenFile,
                   icon: const Icon(Icons.folder_open_rounded, size: 16),
                   label: const Text(
                     'Open File',
-                    style: TextStyle(fontSize: 12.5),
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
                 const SizedBox(width: 10),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
-                    side: const BorderSide(color: Color(0x33FFFFFF)),
+                    side: const BorderSide(color: Color(0x38FFFFFF)),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
-                      vertical: 10,
+                      vertical: 9,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                   onPressed: onOpenPlaylist,
                   icon: const Icon(Icons.playlist_play_rounded, size: 18),
                   label: const Text(
                     'Playlist',
-                    style: TextStyle(fontSize: 12.5),
+                    style: TextStyle(fontSize: 12),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             const Text(
               'Ctrl+O: Open • Space: Play • F: Fullscreen',
-              style: TextStyle(fontSize: 10.5, color: Colors.white30),
+              style: TextStyle(
+                fontSize: 10.5,
+                color: Colors.white38,
+                letterSpacing: 0.2,
+              ),
             ),
           ],
         ),
@@ -1282,370 +1287,420 @@ class _BottomControlsBarState extends ConsumerState<_BottomControlsBar> {
         playlist.medias.isNotEmpty &&
         playlist.index < playlist.medias.length - 1;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xEE141620),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x2EFFFFFF), width: 0.8),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x77000000),
-            blurRadius: 24,
-            offset: Offset(0, 8),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: const Color(0xF6101117),
+            borderRadius: BorderRadius.zero,
+            border: Border.all(color: const Color(0x38FFFFFF), width: 1.0),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x88000000),
+                blurRadius: 24,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Row 1: Controls (Volume, Transport, Actions)
-          Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Volume Icon (click to toggle mute)
-              IconButton(
-                tooltip: widget.volume > 0 ? 'Mute (M)' : 'Unmute (M)',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                icon: Icon(
-                  widget.volume == 0
-                      ? Icons.volume_off_rounded
-                      : (widget.volume < 50
-                          ? Icons.volume_down_rounded
-                          : Icons.volume_up_rounded),
-                  color: widget.volume == 0
-                      ? Colors.white38
-                      : const Color(0xFFEDEDF0),
-                ),
-                onPressed: playerNotifier.toggleMute,
-              ),
-
-              const SizedBox(width: 2),
-
-              // Volume Slider
-              SizedBox(
-                width: 60,
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 2.5,
-                    activeTrackColor: Colors.white,
-                    inactiveTrackColor: const Color(0x28FFFFFF),
-                    thumbColor: Colors.white,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 4.5,
+              // Row 1: Controls (Volume, Transport, Actions)
+              Row(
+                children: [
+                  // Volume Icon (click to toggle mute)
+                  IconButton(
+                    tooltip: widget.volume > 0 ? 'Mute (M)' : 'Unmute (M)',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: Icon(
+                      widget.volume == 0
+                          ? Icons.volume_off_rounded
+                          : (widget.volume < 50
+                              ? Icons.volume_down_rounded
+                              : Icons.volume_up_rounded),
+                      color: widget.volume == 0
+                          ? Colors.white38
+                          : const Color(0xFFEDEDF0),
                     ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 10,
+                    onPressed: playerNotifier.toggleMute,
+                  ),
+
+                  const SizedBox(width: 2),
+
+                  // Volume Slider
+                  SizedBox(
+                    width: 52,
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 2.0,
+                        activeTrackColor: Colors.white,
+                        inactiveTrackColor: const Color(0x28FFFFFF),
+                        thumbColor: Colors.white,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 3.5,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 8,
+                        ),
+                      ),
+                      child: Focus(
+                        canRequestFocus: false,
+                        child: Slider(
+                          value: widget.volume.clamp(0.0, 150.0),
+                          min: 0.0,
+                          max: 150.0,
+                          onChanged: playerNotifier.setVolume,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Focus(
-                    canRequestFocus: false,
-                    child: Slider(
-                      value: widget.volume.clamp(0.0, 150.0),
-                      min: 0.0,
-                      max: 150.0,
-                      onChanged: playerNotifier.setVolume,
+
+                  const SizedBox(width: 4),
+
+                  SizedBox(
+                    width: 30,
+                    child: Text(
+                      '${widget.volume.round()}%',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white54,
+                        fontFeatures: [ui.FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
-                ),
-              ),
 
-              const SizedBox(width: 4),
+                  const Spacer(),
 
-              SizedBox(
-                width: 32,
-                child: Text(
-                  '${widget.volume.round()}%',
-                  style: const TextStyle(fontSize: 10.5, color: Colors.white54),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Playlist Previous button
-              IconButton(
-                tooltip:
-                    canPrevious ? 'Previous in playlist' : 'No previous item',
-                iconSize: 19,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                icon: const Icon(Icons.skip_previous_rounded),
-                onPressed: canPrevious ? playerNotifier.previous : null,
-              ),
-
-              const SizedBox(width: 4),
-
-              // Seek Backward button
-              IconButton(
-                tooltip:
-                    'Seek backward ${preferences.seekStepSeconds}s (${preferences.seekBackwardKeyLabel})',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                icon: const Icon(Icons.replay_rounded),
-                onPressed: widget.hasMedia
-                    ? () => playerNotifier.seekBy(
-                          Duration(seconds: -preferences.seekStepSeconds),
-                        )
-                    : null,
-              ),
-
-              const SizedBox(width: 6),
-
-              // Play / Pause sleek circular button
-              Material(
-                color: const Color(0x22F59E0B),
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: playerNotifier.playOrPause,
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    alignment: Alignment.center,
-                    child: Icon(
-                      playing
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      size: 22,
-                      color: const Color(0xFFF59E0B),
-                    ),
+                  // Playlist Previous button
+                  IconButton(
+                    tooltip: canPrevious
+                        ? 'Previous in playlist'
+                        : 'No previous item',
+                    iconSize: 17,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: const Icon(Icons.skip_previous_rounded),
+                    onPressed: canPrevious ? playerNotifier.previous : null,
                   ),
-                ),
-              ),
 
-              const SizedBox(width: 6),
+                  const SizedBox(width: 3),
 
-              // Seek Forward button
-              IconButton(
-                tooltip:
-                    'Seek forward ${preferences.seekStepSeconds}s (${preferences.seekForwardKeyLabel})',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                icon: const Icon(Icons.forward_rounded),
-                onPressed: widget.hasMedia
-                    ? () => playerNotifier.seekBy(
-                          Duration(seconds: preferences.seekStepSeconds),
-                        )
-                    : null,
-              ),
+                  // Seek Backward button
+                  IconButton(
+                    tooltip:
+                        'Seek backward ${preferences.seekStepSeconds}s (${preferences.seekBackwardKeyLabel})',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: const Icon(Icons.replay_rounded),
+                    onPressed: widget.hasMedia
+                        ? () => playerNotifier.seekBy(
+                              Duration(seconds: -preferences.seekStepSeconds),
+                            )
+                        : null,
+                  ),
 
-              const SizedBox(width: 4),
+                  const SizedBox(width: 5),
 
-              // Playlist Next button
-              IconButton(
-                tooltip: canNext ? 'Next in playlist' : 'No next item',
-                iconSize: 19,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                icon: const Icon(Icons.skip_next_rounded),
-                onPressed: canNext ? playerNotifier.next : null,
-              ),
-
-              const Spacer(),
-
-              // Playback Speed dropdown
-              PopupMenuButton<double>(
-                tooltip: 'Speed',
-                initialValue: widget.speed,
-                onSelected: playerNotifier.setRate,
-                itemBuilder: (_) => [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
-                    .map((rate) => PopupMenuItem(
-                          value: rate,
-                          child: Row(
-                            children: [
-                              if (widget.speed == rate)
-                                const Icon(Icons.check_rounded,
-                                    size: 16, color: Color(0xFFF59E0B))
-                              else
-                                const SizedBox(width: 16),
-                              const SizedBox(width: 8),
-                              Text('${rate}x${rate == 1.0 ? ' (Normal)' : ''}'),
-                            ],
+                  // Play / Pause sleek right-angle button
+                  Material(
+                    color: const Color(0xFF1E202C),
+                    borderRadius: BorderRadius.zero,
+                    child: InkWell(
+                      borderRadius: BorderRadius.zero,
+                      onTap: playerNotifier.playOrPause,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.zero,
+                          border: Border.all(
+                            color: const Color(0x38FFFFFF),
+                            width: 0.8,
                           ),
-                        ))
-                    .toList(),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0x1AFFFFFF),
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: const Color(0x28FFFFFF)),
-                  ),
-                  child: Text(
-                    '${widget.speed}x',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                      color: Colors.white,
+                        ),
+                        child: Icon(
+                          playing ? Icons.pause : Icons.play_arrow,
+                          size: 20,
+                          color: const Color(0xFFF59E0B),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
 
-              const SizedBox(width: 4),
+                  const SizedBox(width: 5),
 
-              // Fullscreen button
-              IconButton(
-                tooltip: widget.isFullScreen
-                    ? 'Exit fullscreen (F)'
-                    : 'Fullscreen (F)',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                icon: Icon(
-                  widget.isFullScreen
-                      ? Icons.fullscreen_exit_rounded
-                      : Icons.fullscreen_rounded,
-                ),
-                onPressed: widget.onToggleFullscreen,
-              ),
+                  // Seek Forward button
+                  IconButton(
+                    tooltip:
+                        'Seek forward ${preferences.seekStepSeconds}s (${preferences.seekForwardKeyLabel})',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: const Icon(Icons.forward_rounded),
+                    onPressed: widget.hasMedia
+                        ? () => playerNotifier.seekBy(
+                              Duration(seconds: preferences.seekStepSeconds),
+                            )
+                        : null,
+                  ),
 
-              // Playlist panel toggle
-              IconButton(
-                tooltip: 'Playlist',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                icon: Icon(
-                  Icons.queue_music_rounded,
-                  color: widget.activeDrawer == ActiveDrawerPanel.playlist
-                      ? const Color(0xFFF59E0B)
-                      : Colors.white70,
-                ),
-                onPressed: () => ref.read(activeDrawerProvider.notifier).state =
-                    widget.activeDrawer == ActiveDrawerPanel.playlist
+                  const SizedBox(width: 3),
+
+                  // Playlist Next button
+                  IconButton(
+                    tooltip: canNext ? 'Next in playlist' : 'No next item',
+                    iconSize: 17,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: const Icon(Icons.skip_next_rounded),
+                    onPressed: canNext ? playerNotifier.next : null,
+                  ),
+
+                  const Spacer(),
+
+                  // Playback Speed dropdown
+                  PopupMenuButton<double>(
+                    tooltip: 'Speed',
+                    initialValue: widget.speed,
+                    onSelected: playerNotifier.setRate,
+                    color: const Color(0xF8151620),
+                    elevation: 16,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
+                      side: BorderSide(color: Color(0x38FFFFFF), width: 0.8),
+                    ),
+                    itemBuilder: (_) => [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+                        .map((rate) => PopupMenuItem(
+                              value: rate,
+                              height: 32,
+                              child: Row(
+                                children: [
+                                  if (widget.speed == rate)
+                                    const Icon(Icons.check_rounded,
+                                        size: 14, color: Color(0xFFF59E0B))
+                                  else
+                                    const SizedBox(width: 14),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${rate}x${rate == 1.0 ? ' (Normal)' : ''}',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: widget.speed == rate
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
+                                      color: widget.speed == rate
+                                          ? const Color(0xFFF59E0B)
+                                          : const Color(0xFFEDEDF0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0x1AFFFFFF),
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(
+                            color: const Color(0x38FFFFFF), width: 0.8),
+                      ),
+                      child: Text(
+                        '${widget.speed}x',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 10.5,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 4),
+
+                  // Fullscreen button
+                  IconButton(
+                    tooltip: widget.isFullScreen
+                        ? 'Exit fullscreen (F)'
+                        : 'Fullscreen (F)',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: Icon(
+                      widget.isFullScreen
+                          ? Icons.fullscreen_exit_rounded
+                          : Icons.fullscreen_rounded,
+                    ),
+                    onPressed: widget.onToggleFullscreen,
+                  ),
+
+                  // Playlist panel toggle
+                  IconButton(
+                    tooltip: 'Playlist',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: Icon(
+                      Icons.queue_music_rounded,
+                      color: widget.activeDrawer == ActiveDrawerPanel.playlist
+                          ? const Color(0xFFF59E0B)
+                          : Colors.white70,
+                    ),
+                    onPressed: () => ref
+                        .read(activeDrawerProvider.notifier)
+                        .state = widget.activeDrawer == ActiveDrawerPanel.playlist
                         ? ActiveDrawerPanel.none
                         : ActiveDrawerPanel.playlist,
-              ),
+                  ),
 
-              // Equalizer panel toggle
-              IconButton(
-                tooltip: 'Audio Equalizer',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                icon: Icon(
-                  Icons.graphic_eq_rounded,
-                  color: widget.activeDrawer == ActiveDrawerPanel.audio
-                      ? const Color(0xFFF59E0B)
-                      : Colors.white70,
-                ),
-                onPressed: () => ref.read(activeDrawerProvider.notifier).state =
-                    widget.activeDrawer == ActiveDrawerPanel.audio
+                  // Equalizer panel toggle
+                  IconButton(
+                    tooltip: 'Audio Equalizer',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: Icon(
+                      Icons.graphic_eq_rounded,
+                      color: widget.activeDrawer == ActiveDrawerPanel.audio
+                          ? const Color(0xFFF59E0B)
+                          : Colors.white70,
+                    ),
+                    onPressed: () => ref
+                        .read(activeDrawerProvider.notifier)
+                        .state = widget.activeDrawer == ActiveDrawerPanel.audio
                         ? ActiveDrawerPanel.none
                         : ActiveDrawerPanel.audio,
-              ),
+                  ),
 
-              // Subtitles panel toggle
-              IconButton(
-                tooltip: 'Subtitles',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                icon: Icon(
-                  Icons.subtitles_rounded,
-                  color: widget.activeDrawer == ActiveDrawerPanel.subtitles
-                      ? const Color(0xFFF59E0B)
-                      : Colors.white70,
-                ),
-                onPressed: () => ref.read(activeDrawerProvider.notifier).state =
-                    widget.activeDrawer == ActiveDrawerPanel.subtitles
+                  // Subtitles panel toggle
+                  IconButton(
+                    tooltip: 'Subtitles',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: Icon(
+                      Icons.subtitles_rounded,
+                      color: widget.activeDrawer == ActiveDrawerPanel.subtitles
+                          ? const Color(0xFFF59E0B)
+                          : Colors.white70,
+                    ),
+                    onPressed: () => ref
+                        .read(activeDrawerProvider.notifier)
+                        .state = widget.activeDrawer == ActiveDrawerPanel.subtitles
                         ? ActiveDrawerPanel.none
                         : ActiveDrawerPanel.subtitles,
+                  ),
+
+                  // Playback settings button
+                  IconButton(
+                    tooltip: 'Settings',
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 26, minHeight: 26),
+                    icon: const Icon(Icons.tune_rounded, color: Colors.white70),
+                    onPressed: widget.onShowPlaybackSettings,
+                  ),
+                ],
               ),
 
-              // Playback settings button
-              IconButton(
-                tooltip: 'Settings',
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                icon: const Icon(Icons.tune_rounded, color: Colors.white70),
-                onPressed: widget.onShowPlaybackSettings,
-              ),
-            ],
-          ),
+              const SizedBox(height: 3),
 
-          const SizedBox(height: 6),
-
-          // Row 2: Seek Bar Row with timestamps
-          Row(
-            children: [
-              Text(
-                formatDuration(displayedPosition),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white70,
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 3.0,
-                      activeTrackColor: const Color(0xFFF59E0B),
-                      inactiveTrackColor: const Color(0x28FFFFFF),
-                      thumbColor: const Color(0xFFF59E0B),
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 4.5,
-                        elevation: 1,
-                      ),
-                      overlayShape: const RoundSliderOverlayShape(
-                        overlayRadius: 10.0,
-                      ),
+              // Row 2: Seek Bar Row with timestamps
+              Row(
+                children: [
+                  Text(
+                    formatDuration(displayedPosition),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                      fontFeatures: [ui.FontFeature.tabularFigures()],
                     ),
-                    child: Focus(
-                      canRequestFocus: false,
-                      child: Slider(
-                        value: sliderMs,
-                        min: 0.0,
-                        max: maxMs,
-                        onChangeStart: (value) {
-                          _isDragging = true;
-                          _clearScrubTimer?.cancel();
-                          setState(() => _scrubPositionMs = value);
-                        },
-                        onChanged: (value) {
-                          setState(() => _scrubPositionMs = value);
-                        },
-                        onChangeEnd: (value) {
-                          _isDragging = false;
-                          _clearScrubTimer?.cancel();
-                          setState(() => _scrubPositionMs = value);
-                          unawaited(playerNotifier.seekTo(
-                            Duration(milliseconds: value.round()),
-                          ));
-                          _clearScrubTimer = Timer(
-                            const Duration(milliseconds: 900),
-                            () {
-                              if (mounted && !_isDragging) {
-                                setState(() => _scrubPositionMs = null);
-                              }
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2.2,
+                          activeTrackColor: const Color(0xFFF59E0B),
+                          inactiveTrackColor: const Color(0x28FFFFFF),
+                          thumbColor: const Color(0xFFF59E0B),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 3.5,
+                            elevation: 1,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 8.0,
+                          ),
+                        ),
+                        child: Focus(
+                          canRequestFocus: false,
+                          child: Slider(
+                            value: sliderMs,
+                            min: 0.0,
+                            max: maxMs,
+                            onChangeStart: (value) {
+                              _isDragging = true;
+                              _clearScrubTimer?.cancel();
+                              setState(() => _scrubPositionMs = value);
                             },
-                          );
-                        },
+                            onChanged: (value) {
+                              setState(() => _scrubPositionMs = value);
+                            },
+                            onChangeEnd: (value) {
+                              _isDragging = false;
+                              _clearScrubTimer?.cancel();
+                              setState(() => _scrubPositionMs = value);
+                              unawaited(playerNotifier.seekTo(
+                                Duration(milliseconds: value.round()),
+                              ));
+                              _clearScrubTimer = Timer(
+                                const Duration(milliseconds: 900),
+                                () {
+                                  if (mounted && !_isDragging) {
+                                    setState(() => _scrubPositionMs = null);
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              Text(
-                formatDuration(duration),
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white54,
-                ),
+                  Text(
+                    formatDuration(duration),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white54,
+                      fontFeatures: [ui.FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

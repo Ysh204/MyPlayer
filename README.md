@@ -14,6 +14,11 @@ Graphic equalizer with presets, preamp gain control, night mode dynamic range co
 
 ![Audio Equalizer and DSP](assets/screenshots/audio_equalizer.png)
 
+### Subtitles & Track Management
+Subtitles drawer with track selection, external subtitle loader, positioning, font scaling, and delay calibration.
+
+![Subtitles and Track Management](assets/screenshots/subtitles_panel.png)
+
 ## Features
 
 - **Minimal HUD Playbar**: Centered floating controls bar with volume, playback controls, seek slider, and track settings. Auto-hides with the mouse cursor during playback.
